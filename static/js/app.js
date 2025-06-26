@@ -13,7 +13,7 @@ class AttendanceSystem {
         this.employeeUploadedPhoto = document.getElementById('employee-uploaded-photo');
         this.employeeLivePhoto = document.getElementById('employee-live-photo');
         this.toast = new bootstrap.Toast(document.getElementById('status-toast'));
-        this.lastAttendanceTimestamp = null;
+        this.lastAttendanceTimestamp = localStorage.getItem('lastAttendanceTimestamp') || null;
         
         this.initializeEventListeners();
         this.startAttendancePolling();
@@ -133,8 +133,9 @@ class AttendanceSystem {
                 const response = await fetch('/api/last-attendance');
                 const result = await response.json();
                 if (result.status === 'success' && result.data.timestamp) {
-                    if (this.lastAttendanceTimestamp !== result.data.timestamp) {
-                        this.lastAttendanceTimestamp = result.data.timestamp;
+                    if (this.lastAttendanceTimestamp !== String(result.data.timestamp)) {
+                        this.lastAttendanceTimestamp = String(result.data.timestamp);
+                        localStorage.setItem('lastAttendanceTimestamp', this.lastAttendanceTimestamp);
                         this.showAttendanceConfirmation({
                             fullName: result.data.name,
                             employeeId: result.data.employee_id,
