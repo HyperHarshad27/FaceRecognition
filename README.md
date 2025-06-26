@@ -6,12 +6,14 @@ A modern web-based face recognition attendance system built with Python Flask, O
 
 - **Real-time Face Recognition**: Live camera feed with face detection and recognition
 - **Web Interface**: Modern, responsive web UI built with Bootstrap
+- **Admin Authentication**: Secure admin login/logout for protected management and attendance routes
 - **Employee Management**: Add, delete, and manage employees through web interface
 - **Attendance Tracking**: Automatic attendance logging with timestamps
-- **Employee Management**: Display registered employees from dataset
+- **Live Face Capture Storage**: Stores live face images of recognized employees
 - **Attendance Reports**: View attendance history and today's count
-- **RESTful API**: Backend API for frontend integration
+- **RESTful API**: Backend API for frontend integration (admin-protected)
 - **Photo Upload**: Drag-and-drop photo upload for employee registration
+- **Attendance Confirmation Popup**: Shows last attendance event with photos
 
 ## Prerequisites
 
@@ -25,11 +27,11 @@ A modern web-based face recognition attendance system built with Python Flask, O
 
 2. **Install Python dependencies**:
    ```bash
-   pip install opencv-python face-recognition numpy flask flask-cors
+   pip install -r requirements.txt
    ```
 
 3. **Setup the dataset**:
-   - Create a `dataset` folder in the project root
+   - Create a `dataset` folder in the project root (if not present)
    - Add employee photos to the `dataset` folder
    - Use clear, front-facing photos with the employee's name as the filename
    - Supported formats: JPG, PNG, JPEG, GIF
@@ -66,11 +68,18 @@ docker run -it --rm -p 5000:5000 \
 
 ## Usage
 
+### Admin Login
+- Go to `/admin/login` or click "Admin Login" in the navigation bar.
+- **Default credentials:**
+  - Username: `ADMIN`
+  - Password: `ADMIN`
+- **Important:** Change the admin password and Flask secret key for production use.
+
 ### Managing Employees
 
 1. **Access Employee Management**:
-   - Click "Manage Employees" in the navigation bar
-   - Or go directly to `http://localhost:5000/employees`
+   - Login as admin
+   - Click "Manage Employees" in the navigation bar or go to `/employees`
 
 2. **Adding Employees**:
    - Fill in the employee name
@@ -90,52 +99,67 @@ docker run -it --rm -p 5000:5000 \
 3. The system will automatically detect faces and mark attendance
 4. Recognized employees will be highlighted in green with their names
 5. Unknown faces will be highlighted in red
+6. Live face captures are saved in `static/live_captures/`
 
 ### Viewing Attendance
 
 - **Today's Count**: Shows how many employees are present today
-- **Attendance Log**: Complete history of all attendance records
+- **Attendance Log**: Complete history of all attendance records (admin dashboard)
 - **Auto-refresh**: Attendance data updates automatically every 30 seconds
+- **Last Attendance Popup**: Shows the last attendance event with uploaded and live photos
 
 ## File Structure
 
 ```
-Face Recognition/
-├── app.py                 # Main Flask application
-├── templates/
-│   ├── index.html        # Main dashboard
-│   └── employees.html    # Employee management page
+Face Rocognition/
+├── app.py                  # Main Flask application
+├── requirements.txt        # Python dependencies
+├── Dockerfile              # Docker build file
+├── .dockerignore           # Docker ignore file
+├── templates/              # HTML templates
+│   ├── index.html
+│   ├── employees.html
+│   ├── admin_login.html
+│   ├── admin_dashboard.html
+│   └── admin_attendance.html
 ├── static/
 │   ├── css/
-│   │   └── style.css     # Custom styles
-│   └── js/
-│       ├── app.js        # Main dashboard JavaScript
-│       └── employees.js  # Employee management JavaScript
-├── dataset/              # Employee photos folder
+│   │   └── style.css       # Custom styles
+│   ├── js/
+│   │   ├── app.js          # Main dashboard JavaScript
+│   │   └── employees.js    # Employee management JavaScript
+│   └── live_captures/      # Saved live face images
+├── dataset/                # Employee photos folder
+│   └── Harshad.jpeg        # Example employee photo
 ├── logs/
-│   └── attendance.csv    # Attendance records
+│   └── attendance.csv      # Attendance records
 └── README.md
 ```
 
 ## API Endpoints
 
+> **Note:** All `/api/employees/*` endpoints require admin login (session-based).
+
 ### Main Interface
 - `GET /` - Main dashboard
-- `GET /employees` - Employee management page
+- `GET /employees` - Employee management page (admin only)
+- `GET /admin/login` - Admin login page
+- `GET /admin/logout` - Admin logout
+- `GET /admin/attendance` - Admin dashboard with attendance log
 
 ### Camera Control
 - `GET /api/start-camera` - Start camera feed
 - `GET /api/stop-camera` - Stop camera feed
 - `GET /video_feed` - Live camera feed stream
 
-### Employee Management
+### Employee Management (Admin only)
 - `GET /api/employees` - Get registered employees
 - `POST /api/employees/add` - Add new employee with photo
 - `DELETE /api/employees/delete/<name>` - Delete employee
 - `POST /api/employees/upload` - Upload employee photo
 
 ### Attendance
-- `GET /api/attendance` - Get attendance records
+- `GET /api/last-attendance` - Get last attendance event (for popup)
 
 ### File Serving
 - `GET /dataset/<filename>` - Serve employee photos
@@ -187,14 +211,16 @@ Face Recognition/
 
 ## Security Considerations
 
-- This is a basic implementation for demonstration purposes
-- For production use, consider:
-  - Adding authentication and authorization
-  - Implementing HTTPS
-  - Adding input validation and sanitization
-  - Securing the API endpoints
-  - Adding rate limiting
-  - Validating uploaded file types and content
+- This is a basic implementation for demonstration/educational purposes
+- For production use, you **must**:
+  - Change the Flask `secret_key` in `app.py`
+  - Change the default admin password and use a secure password
+  - Add authentication and authorization for all sensitive routes
+  - Implement HTTPS
+  - Add input validation and sanitization
+  - Secure the API endpoints
+  - Add rate limiting
+  - Validate uploaded file types and content
 
 ## Contributing
 
